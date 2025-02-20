@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Call of Duty Video Vault</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;600;700&display=swap');
+
+        body {
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #0d0d0d 0%, #1a1a1a 100%);
+            color: #fff;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+
+        header {
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(15px);
+            padding: 15px 0;
+        }
+        nav {
+            max-width: 1300px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 30px;
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            color: #ff3c00;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        nav a {
+            color: #d1d1d6;
+            text-decoration: none;
+            font-size: 16px;
+            margin-left: 30px;
+            transition: color 0.3s;
+        }
+        nav a:hover {
+            color: #ff3c00;
+        }
+        #userInfo {
+            color: #d1d1d6;
+            font-size: 16px;
+        }
+
+        #particleCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            z-index: -1;
+            opacity: 0.2;
+        }
+
+        main {
+            max-width: 1300px;
+            margin: 120px auto 80px;
+            padding: 0 30px;
+            text-align: center;
+        }
+        h1 {
+            font-size: 56px;
+            font-weight: 700;
+            background: linear-gradient(90deg, #ff3c00, #ff8c00);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 15px;
+        }
+        p.subtitle {
+            font-size: 22px;
+            color: #86868b;
+            max-width: 600px;
+            margin: 0 auto 50px;
+        }
+
+        #uploadSection {
+            position: relative;
+            padding: 40px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 60px;
+            display: none;
+        }
+        #dropZone {
+            border: 2px dashed #ff3c00;
+            border-radius: 15px;
+            padding: 60px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        #dropZone.dragover {
+            background: rgba(255, 60, 0, 0.1);
+        }
+        #videoInput {
+            display: none;
+        }
+        .upload-btn {
+            background: #ff3c00;
+            color: #fff;
+            padding: 14px 30px;
+            border-radius: 30px;
+            border: none;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.3s, background 0.3s;
+        }
+        .upload-btn:hover {
+            transform: scale(1.05);
+            background: #e03500;
+        }
+
+        #videoGallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 30px;
+        }
+        .video-container {
+            position: relative;
+            background: #fff;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            transform: perspective(1000px) rotateX(0deg) rotateY(0deg);
+            transition: transform 0.4s, box-shadow 0.4s;
+        }
+        .video-container:hover {
+            transform: perspective(1000px) rotateX(5deg) rotateY(5deg);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+        }
+        video {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            display: block;
+        }
+        .video-title {
+            padding: 15px;
+            font-size: 16px;
+            color: #1d1d1f;
+            background: #fff;
+            text-align: left;
+        }
+
+        #registerModal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+        .modal-content {
+            background: #1a1a1a;
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        }
+        .modal-content input {
+            padding: 10px;
+            width: 200px;
+            border-radius: 10px;
+            border: 1px solid #ff3c00;
+            background: #333;
+            color: #fff;
+            font-size: 16px;
+            outline: none;
+        }
+        .modal-content button {
+            margin-top: 20px;
+            background: #ff3c00;
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 20px;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .modal-content button:hover {
+            background: #e03500;
+        }
+
+        footer {
+            background: rgba(0, 0, 0, 0.9);
+            padding: 40px 30px;
+            text-align: center;
+            font-size: 14px;
+            color: #86868b;
+        }
+        .footer-links a {
+            color: #d1d1d6;
+            margin: 0 15px;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        .footer-links a:hover {
+            color: #ff3c00;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="particleCanvas"></canvas>
+    <header>
+        <nav>
+            <a href="#" class="logo">CoD Vault</a>
+            <div>
+                <a href="#">Home</a>
+                <a href="#">Vault</a>
+                <a href="#">Upload</a>
+                <a href="#">Community</a>
+                <span id="userInfo"></span>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <h1>Call of Duty Video Vault</h1>
+        <p class="subtitle">Guarda tus momentos épicos. Comparte tu legado. Domina la galería.</p>
+
+        <div id="uploadSection">
+            <div id="dropZone">
+                <input type="file" id="videoInput" accept="video/*" multiple>
+                <p>Arrastra tus videos aquí o</p>
+                <button class="upload-btn" onclick="document.getElementById('videoInput').click()">Sube tus jugadas</button>
+            </div>
+        </div>
+
+        <div id="videoGallery"></div>
+    </main>
+
+    <footer>
+        <div class="footer-links">
+            <a href="#">Términos</a>
+            <a href="#">Privacidad</a>
+            <a href="#">Soporte</a>
+            <a href="#">Acerca de</a>
+        </div>
+        <p>© 2025 CoD Video Vault. Built for the warriors.</p>
+    </footer>
+
+    <div id="registerModal" style="display: none;">
+        <div class="modal-content">
+            <h2>Elige tu nombre de usuario</h2>
+            <input type="text" id="usernameInput" placeholder="Tu nombre aquí" maxlength="20">
+            <button onclick="registerUser()">Confirmar</button>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-storage.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
+
+    <script>
+        // Configuración de Firebase (reemplaza con tus credenciales)
+        const firebaseConfig = {
+            apiKey: "TU_API_KEY",
+            authDomain: "TU_PROYECTO.firebaseapp.com",
+            projectId: "TU_PROYECTO",
+            storageBucket: "TU_PROYECTO.appspot.com",
+            messagingSenderId: "TU_SENDER_ID",
+            appId: "TU_APP_ID"
+        };
+
+        // Inicializar Firebase
+        firebase.initializeApp(firebaseConfig);
+        const storage = firebase.storage();
+        const db = firebase.firestore();
+
+        // Particles Background
+        const canvas = document.getElementById('particleCanvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.vx = (Math.random() - 0.5) * 2;
+                this.vy = (Math.random() - 0.5) * 2;
+                this.radius = 2;
+            }
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                if (this.x < 0 || this.x > canvas.width) this.vx = -this.vx;
+                if (this.y < 0 || this.y > canvas.height) this.vy = -this.vy;
+            }
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(255, 60, 0, 0.5)';
+                ctx.fill();
+            }
+        }
+
+        const particles = Array.from({ length: 50 }, () => new Particle());
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+            requestAnimationFrame(animateParticles);
+        }
+        animateParticles();
+
+        // Registro de usuario basado en IP
+        const registerModal = document.getElementById('registerModal');
+        const usernameInput = document.getElementById('usernameInput');
+        const userInfo = document.getElementById('userInfo');
+        const uploadSection = document.getElementById('uploadSection');
+        let userIP = '';
+
+        fetch('https://api.ipify.org?format=json')
+            .then(response => response.json())
+            .then(data => {
+                userIP = data.ip;
+                checkUserRegistration();
+                loadVideos();
+            })
+            .catch(() => {
+                userIP = 'unknown';
+                checkUserRegistration();
+                loadVideos();
+            });
+
+        function checkUserRegistration() {
+            const storedUser = localStorage.getItem('codUser_' + userIP);
+            if (storedUser) {
+                userInfo.textContent = `Bienvenido, ${storedUser}`;
+                uploadSection.style.display = 'block';
+            } else {
+                registerModal.style.display = 'flex';
+            }
+        }
+
+        function registerUser() {
+            const username = usernameInput.value.trim();
+            if (username && username.length >= 3) {
+                localStorage.setItem('codUser_' + userIP, username);
+                userInfo.textContent = `Bienvenido, ${username}`;
+                registerModal.style.display = 'none';
+                uploadSection.style.display = 'block';
+            } else {
+                alert('Por favor, ingresa un nombre de usuario válido (mínimo 3 caracteres).');
+            }
+        }
+
+        // Video Upload Logic
+        const videoInput = document.getElementById('videoInput');
+        const dropZone = document.getElementById('dropZone');
+        const videoGallery = document.getElementById('videoGallery');
+
+        dropZone.addEventListener('dragover', e => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+        dropZone.addEventListener('drop', e => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            handleFiles(e.dataTransfer.files);
+        });
+        videoInput.addEventListener('change', e => handleFiles(e.target.files));
+
+        function handleFiles(files) {
+            const username = localStorage.getItem('codUser_' + userIP);
+            if (!username) {
+                alert('Regístrate primero para subir videos.');
+                return;
+            }
+
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                if (file.type.startsWith('video/')) {
+                    const storageRef = storage.ref(`videos/${username}/${Date.now()}_${file.name}`);
+                    const uploadTask = storageRef.put(file);
+
+                    uploadTask.on('state_changed',
+                        (snapshot) => {
+                            // Progreso de la subida (opcional)
+                            const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                            console.log(`Subiendo: ${progress}%`);
+                        },
+                        (error) => {
+                            alert('Error al subir el video: ' + error.message);
+                        },
+                        () => {
+                            uploadTask.snapshot.ref.getDownloadURL().then(url => {
+                                const videoData = {
+                                    name: file.name,
+                                    url: url,
+                                    user: username,
+                                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                                };
+                                db.collection('videos').add(videoData).then(() => {
+                                    addVideoToGallery(videoData);
+                                });
+                            });
+                        }
+                    );
+                } else {
+                    alert(`"${file.name}" no es un video válido.`);
+                }
+            }
+        }
+
+        // Cargar videos existentes
+        function loadVideos() {
+            db.collection('videos').orderBy('timestamp', 'desc').onSnapshot(snapshot => {
+                videoGallery.innerHTML = ''; // Limpiar galería
+                snapshot.forEach(doc => {
+                    const videoData = doc.data();
+                    addVideoToGallery(videoData);
+                });
+            });
+        }
+
+        function addVideoToGallery(videoData) {
+            const videoContainer = document.createElement('div');
+            videoContainer.className = 'video-container';
+
+            const videoElement = document.createElement('video');
+            videoElement.src = videoData.url;
+            videoElement.controls = true;
+            videoElement.preload = 'metadata';
+
+            const videoTitle = document.createElement('div');
+            videoTitle.className = 'video-title';
+            videoTitle.textContent = `${videoData.name} - Subido por ${videoData.user}`;
+
+            videoContainer.appendChild(videoElement);
+            videoContainer.appendChild(videoTitle);
+            videoGallery.appendChild(videoContainer);
+        }
+    </script>
+</body>
+</html>
